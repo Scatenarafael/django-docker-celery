@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+import core.log as log
+
+LOGGING = log.LOGGING
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -47,6 +51,8 @@ INSTALLED_APPS = [
     "whitenoise.runserver_nostatic",  # Adicione esta linha
     "rest_framework",
     "corsheaders",
+    "django_celery_beat",
+    "django_celery_results",
     "api",
 ]
 
@@ -157,12 +163,17 @@ REST_FRAMEWORK = {
 }
 
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
 # CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "amqp://guest:guest@rabbitmq:5672/")
-CELERY_RESULT_BACKEND = os.environ.get(
-    "CELERY_BACKEND",
-    f"db+postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
-)
+# CELERY_RESULT_BACKEND = (
+# f"db+postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+# )
+
+# Celery Configuration Options
+CELERY_TIMEZONE = "America/Sao_Paulo"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
