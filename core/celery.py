@@ -14,10 +14,12 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # Definição das filas
 app.conf.task_queues = (Queue("emails"),)  # Fila para envio de e-mails
+app.conf.task_queues = (Queue("files"),)  # Fila para envio de e-mails
 
 # Definição de roteamento automático
 app.conf.task_routes = {
     "core.send_email": {"queue": "emails"},
+    "core.move_files": {"queue": "files"},
 }
 
 
@@ -25,14 +27,17 @@ app.conf.beat_schedule = {
     "add-every-minute": {
         "task": "core.add",
         "schedule": crontab(minute="*/5"),
+        "timezone": "America/Sao_Paulo",
         "args": (16, 16),
     },
     "write-every-minute": {
         "task": "core.write",
+        "timezone": "America/Sao_Paulo",
         "schedule": crontab(minute="*/10"),
     },
     "send-email-every-minute": {
         "task": "core.send_email",
+        "timezone": "America/Sao_Paulo",
         "schedule": crontab(minute="*/15"),
         "args": ["rafascatena@gmail.com"],
     },

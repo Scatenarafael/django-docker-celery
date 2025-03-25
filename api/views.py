@@ -1,11 +1,14 @@
 import logging
+import os
 import time
 
+from celery import chain
 from celery.result import AsyncResult
 from rest_framework import response, status
 from rest_framework.views import APIView
 
-from core.tasks import send_email
+from core.settings import BASE_DIR
+from core.tasks import move_files, send_email
 
 logger = logging.getLogger("conections_logger")
 
@@ -32,6 +35,26 @@ def start_email_queue():
         email_result = None
 
 
+def get_filenames_by_dir(directory_path):
+    try:
+        filenames = os.listdir(directory_path)
+        tasks = [move_files.si(file, directory_path) for file in filenames]
+        task_chain = chain(*tasks)
+
+        task_chain.apply_async()
+        # [
+        #     move_files.apply_async(args=(file, directory_path))
+        #     for file in filenames
+        #     if os.path.isfile(os.path.join(directory_path, file))
+        # ]
+    except FileNotFoundError:
+        logger.error(f"Directory not found: {directory_path}")
+        return []
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        return []
+
+
 class TaskView(APIView):
     """
     View to list all users in the system.
@@ -43,8 +66,10 @@ class TaskView(APIView):
     def get(self, request, format=None):
         # Chamando as tarefas assíncronas
         logger.debug("GET TaskView")
+
+        get_filenames_by_dir(f"{BASE_DIR}/dados")
         # start_task()
-        start_email_queue()
+        # start_email_queue()
         return response.Response(
             {"msg": "Helloworld"}, status=status.HTTP_200_OK
         )
