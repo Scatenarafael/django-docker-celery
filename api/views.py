@@ -7,7 +7,7 @@ from celery.result import AsyncResult
 from rest_framework import response, status
 from rest_framework.views import APIView
 
-from core.settings import BASE_DIR
+# from core.settings import BASE_DIR
 from core.tasks import move_files, send_email
 
 logger = logging.getLogger("conections_logger")
@@ -38,6 +38,7 @@ def start_email_queue():
 def get_filenames_by_dir(directory_path):
     try:
         filenames = os.listdir(directory_path)
+        logger.debug(f"Files found: {filenames}")
         tasks = [move_files.si(file, directory_path) for file in filenames]
         task_chain = chain(*tasks)
 
@@ -67,7 +68,7 @@ class TaskView(APIView):
         # Chamando as tarefas assíncronas
         logger.debug("GET TaskView")
 
-        get_filenames_by_dir(f"{BASE_DIR}/dados")
+        # get_filenames_by_dir(f"{BASE_DIR}/dados")
         # start_task()
         # start_email_queue()
         return response.Response(
